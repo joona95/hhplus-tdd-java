@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -15,13 +18,15 @@ class PointServiceIntegrationTest {
 
     UserPointTable userPointTable;
     PointHistoryTable pointHistoryTable;
+    UserLockManager userLockManager;
     PointService pointService;
 
     @BeforeEach
     void before() {
         userPointTable = new UserPointTable();
         pointHistoryTable = new PointHistoryTable();
-        pointService = new PointService(userPointTable, pointHistoryTable);
+        userLockManager = new UserLockManager();
+        pointService = new PointService(userPointTable, pointHistoryTable, userLockManager);
     }
 
     @Test
@@ -151,5 +156,111 @@ class PointServiceIntegrationTest {
                         pointHistory,
                         new PointHistory(2L, 1L, 1000L, TransactionType.USE, result.updateMillis())
                 ));
+    }
+
+    @Test
+    void 특정_유저_충전_요청이_동시에_들어왔을_때_모든_요청들이_정상적으로_반영된_유저_포인트_값을_반환() throws InterruptedException {
+
+        //given
+        int threadCount = 20;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+
+        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+
+        //when
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                pointService.charge(1L, 1000L);
+                countDownLatch.countDown();
+            });
+        }
+
+        countDownLatch.await();
+
+        //then
+        UserPoint userPoint = pointService.getUserPointById(1L);
+
+        assertThat(userPoint.id()).isEqualTo(1L);
+        assertThat(userPoint.point()).isEqualTo(1000L * threadCount);
+    }
+
+    @Test
+    void 특정_유저_충전_요청이_동시에_들어왔을_때_모든_요청들이_정상적으로_반영된_유저_히스토리_내역을_저장() throws InterruptedException {
+
+        //given
+        int threadCount = 20;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+
+        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+
+        //when
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                pointService.charge(1L, 1000L);
+                countDownLatch.countDown();
+            });
+        }
+
+        countDownLatch.await();
+
+        //then
+        assertThat(pointService.getPointHistoriesByUserId(1L)).hasSize(threadCount);
+    }
+
+    @Test
+    void 특정_유저_사용_요청이_동시에_들어왔을_때_모든_요청들이_정상적으로_반영된_유저_포인트_값을_반환() throws InterruptedException {
+
+        //given
+        pointService.charge(1L, 20000L);
+
+        int threadCount = 20;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+
+        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+
+        //when
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                pointService.use(1L, 1000L);
+                countDownLatch.countDown();
+            });
+        }
+
+        countDownLatch.await();
+
+        //then
+        UserPoint userPoint = pointService.getUserPointById(1L);
+
+        assertThat(userPoint.id()).isEqualTo(1L);
+        assertThat(userPoint.point()).isEqualTo(0L);
+    }
+
+    @Test
+    void 특정_유저_사용_요청이_동시에_들어왔을_때_모든_요청들이_정상적으로_반영된_유저_히스토리_내역을_저장() throws InterruptedException {
+
+        //given
+        pointService.charge(1L, 20000L);
+
+        int threadCount = 20;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+
+        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+
+        //when
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                pointService.use(1L, 1000L);
+                countDownLatch.countDown();
+            });
+        }
+
+        countDownLatch.await();
+
+        //then
+        assertThat(pointService.getPointHistoriesByUserId(1L)).hasSize(threadCount + 1);
     }
 }
