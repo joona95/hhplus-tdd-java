@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -20,6 +21,8 @@ class PointServiceTest {
     UserPointTable userPointTable;
     @Mock
     PointHistoryTable pointHistoryTable;
+    @Mock
+    UserLockManager userLockManager;
     @InjectMocks
     PointService pointService;
 
@@ -74,6 +77,8 @@ class PointServiceTest {
                 .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
         when(userPointTable.insertOrUpdate(1L, 2000L))
                 .thenReturn(new UserPoint(1L, 2000L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.charge(1L, 1000L);
@@ -90,6 +95,8 @@ class PointServiceTest {
                 .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
         when(userPointTable.insertOrUpdate(1L, 2000L))
                 .thenReturn(new UserPoint(1L, 2000L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.charge(1L, 1000L);
@@ -107,6 +114,8 @@ class PointServiceTest {
                 .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
         when(userPointTable.insertOrUpdate(1L, 0L))
                 .thenReturn(new UserPoint(1L, 0L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.use(1L, 1000L);
@@ -123,6 +132,8 @@ class PointServiceTest {
                 .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
         when(userPointTable.insertOrUpdate(1L, 0L))
                 .thenReturn(new UserPoint(1L, 0L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.use(1L, 1000L);
