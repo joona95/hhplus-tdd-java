@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -20,6 +21,8 @@ class PointServiceTest {
     UserPointTable userPointTable;
     @Mock
     PointHistoryTable pointHistoryTable;
+    @Mock
+    UserLockManager userLockManager;
     @InjectMocks
     PointService pointService;
 
@@ -71,7 +74,11 @@ class PointServiceTest {
 
         //given
         when(userPointTable.selectById(1L))
-                .thenReturn(new UserPoint(1L, ANY_AMOUNT, ANY_UPDATE_MILLIS));
+                .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
+        when(userPointTable.insertOrUpdate(1L, 2000L))
+                .thenReturn(new UserPoint(1L, 2000L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.charge(1L, 1000L);
@@ -85,7 +92,11 @@ class PointServiceTest {
 
         //given
         when(userPointTable.selectById(1L))
-                .thenReturn(new UserPoint(1L, ANY_AMOUNT, ANY_UPDATE_MILLIS));
+                .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
+        when(userPointTable.insertOrUpdate(1L, 2000L))
+                .thenReturn(new UserPoint(1L, 2000L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.charge(1L, 1000L);
@@ -100,13 +111,17 @@ class PointServiceTest {
 
         //given
         when(userPointTable.selectById(1L))
-                .thenReturn(new UserPoint(1L, ANY_AMOUNT, ANY_UPDATE_MILLIS));
+                .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
+        when(userPointTable.insertOrUpdate(1L, 0L))
+                .thenReturn(new UserPoint(1L, 0L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.use(1L, 1000L);
 
         //then
-        assertThat(result).isEqualTo(new UserPoint(1L, ANY_AMOUNT - 1000L, result.updateMillis()));
+        assertThat(result).isEqualTo(new UserPoint(1L, 0L, result.updateMillis()));
     }
 
     @Test
@@ -114,13 +129,17 @@ class PointServiceTest {
 
         //given
         when(userPointTable.selectById(1L))
-                .thenReturn(new UserPoint(1L, ANY_AMOUNT, ANY_UPDATE_MILLIS));
+                .thenReturn(new UserPoint(1L, 1000L, ANY_UPDATE_MILLIS));
+        when(userPointTable.insertOrUpdate(1L, 0L))
+                .thenReturn(new UserPoint(1L, 0L, ANY_UPDATE_MILLIS));
+        when(userLockManager.getLock(1L))
+                .thenReturn(new ReentrantLock());
 
         //when
         UserPoint result = pointService.use(1L, 1000L);
 
         //then
-        verify(userPointTable, times(1)).insertOrUpdate(1L, ANY_AMOUNT - 1000L);
+        verify(userPointTable, times(1)).insertOrUpdate(1L, 0L);
         verify(pointHistoryTable, times(1)).insert(1L, 1000L, TransactionType.USE, result.updateMillis());
     }
 }
