@@ -30,7 +30,7 @@ public class PointService {
         UserPoint userPoint = userPointTable.selectById(id);
         userPoint = userPoint.charge(amount);
 
-        userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
+        userPoint = userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
         pointHistoryTable.insert(id, amount, TransactionType.CHARGE, userPoint.updateMillis());
 
         return userPoint;
@@ -41,7 +41,7 @@ public class PointService {
         UserPoint userPoint = userPointTable.selectById(id);
         userPoint = userPoint.use(amount);
 
-        userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
+        userPoint = userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
         pointHistoryTable.insert(id, amount, TransactionType.USE, userPoint.updateMillis());
 
         return userPoint;
