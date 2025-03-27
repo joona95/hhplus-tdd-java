@@ -5,16 +5,19 @@ import io.hhplus.tdd.database.UserPointTable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class PointService {
 
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
+    private final UserLockManager userLockManager;
 
-    public PointService(UserPointTable userPointTable, PointHistoryTable pointHistoryTable) {
+    public PointService(UserPointTable userPointTable, PointHistoryTable pointHistoryTable, UserLockManager userLockManager) {
         this.userPointTable = userPointTable;
         this.pointHistoryTable = pointHistoryTable;
+        this.userLockManager = userLockManager;
     }
 
     public UserPoint getUserPointById(long id) {
@@ -27,23 +30,35 @@ public class PointService {
 
     public UserPoint charge(long id, long amount) {
 
-        UserPoint userPoint = userPointTable.selectById(id);
-        userPoint = userPoint.charge(amount);
+        ReentrantLock lock = userLockManager.getLock(id);
+        lock.lock();
+        try {
+            UserPoint userPoint = userPointTable.selectById(id);
+            userPoint = userPoint.charge(amount);
 
-        userPoint = userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
-        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, userPoint.updateMillis());
+            userPoint = userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
+            pointHistoryTable.insert(id, amount, TransactionType.CHARGE, userPoint.updateMillis());
 
-        return userPoint;
+            return userPoint;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public UserPoint use(long id, long amount) {
 
-        UserPoint userPoint = userPointTable.selectById(id);
-        userPoint = userPoint.use(amount);
+        ReentrantLock lock = userLockManager.getLock(id);
+        lock.lock();
+        try {
+            UserPoint userPoint = userPointTable.selectById(id);
+            userPoint = userPoint.use(amount);
 
-        userPoint = userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
-        pointHistoryTable.insert(id, amount, TransactionType.USE, userPoint.updateMillis());
+            userPoint = userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
+            pointHistoryTable.insert(id, amount, TransactionType.USE, userPoint.updateMillis());
 
-        return userPoint;
+            return userPoint;
+        } finally {
+            lock.unlock();
+        }
     }
 }
