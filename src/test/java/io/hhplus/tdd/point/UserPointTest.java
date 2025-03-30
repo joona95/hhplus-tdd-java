@@ -1,7 +1,8 @@
 package io.hhplus.tdd.point;
 
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -14,175 +15,135 @@ class UserPointTest {
     @Nested
     class 유저_포인트_생성 {
 
-        @Test
-        void 유저_아이디가_0보다_작은_경우_유저_포인트_생성_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {-1000L, -10L, -3L, -2L, -1L})
+        void 유저_아이디가_0보다_작으면_파라미터_예외_발생(long userId) {
 
             //when, then
-            assertThatThrownBy(() -> new UserPoint(-1L, 1000L, ANY_UPDATE_MILLIS))
+            assertThatThrownBy(() -> new UserPoint(userId, 1000L, ANY_UPDATE_MILLIS))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("유저 아이디 값은 0 이상이어야 합니다.");
 
         }
 
-        @Test
-        void 유저_아이디가_0인_경우_유저_포인트_생성_시_정상적으로_유저_포인트_생성() {
+        @ParameterizedTest
+        @ValueSource(longs = {0L, 1L, 2L, 3L, 10L, 1000L})
+        void 유저_아이디가_0이상이면_정상적으로_생성(long userId) {
 
             //when
-            UserPoint userPoint = new UserPoint(0L, 1000L, ANY_UPDATE_MILLIS);
+            UserPoint userPoint = new UserPoint(userId, 1000L, ANY_UPDATE_MILLIS);
 
             //then
-            assertThat(userPoint).isEqualTo(new UserPoint(0L, 1000L, ANY_UPDATE_MILLIS));
+            assertThat(userPoint).isEqualTo(new UserPoint(userId, 1000L, ANY_UPDATE_MILLIS));
         }
 
-        @Test
-        void 유저_포인트_금액이_0보다_작은_경우_유저_포인트_생성_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {-1000L, -10L, -3L, -2L, -1L})
+        void 금액이_0보다_작으면_파라미터_예외_발생(long amount) {
 
             //when, then
-            assertThatThrownBy(() -> new UserPoint(ANY_ID, -1L, ANY_UPDATE_MILLIS))
+            assertThatThrownBy(() -> new UserPoint(ANY_ID, amount, ANY_UPDATE_MILLIS))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("유저 포인트 값은 0 이상이어야 합니다.");
         }
 
-        @Test
-        void 유저_포인트_금액이_0인_유저_포인트_생성_시_정상적으로_유저_포인트_생성() {
+        @ParameterizedTest
+        @ValueSource(longs = {0L, 1L, 2L, 3L, 10L, 1000L})
+        void 금액이_0이상이면_정상적으로_생성(long amount) {
 
             //when
-            UserPoint userPoint = new UserPoint(ANY_ID, 0L, ANY_UPDATE_MILLIS);
+            UserPoint userPoint = new UserPoint(ANY_ID, amount, ANY_UPDATE_MILLIS);
 
             //then
-            assertThat(userPoint).isEqualTo(new UserPoint(ANY_ID, 0L, ANY_UPDATE_MILLIS));
+            assertThat(userPoint).isEqualTo(new UserPoint(ANY_ID, amount, ANY_UPDATE_MILLIS));
         }
     }
 
     @Nested
     class 유저_포인트_충전 {
 
-        @Test
-        void 충전_금액이_0보다_작을_경우_유저_포인트_충전_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {-1000L, -10L, -3L, -2L, -1L, 0L})
+        void 충전_금액이_0이하이면_파라미터_예외_발생(long amount) {
 
             //given
             UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
 
             //when, then
-            assertThatThrownBy(() -> userPoint.charge(-1L))
+            assertThatThrownBy(() -> userPoint.charge(amount))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("충전 금액은 0보다 커야 합니다.");
         }
 
-        @Test
-        void 충전_금액이_0일_경우_유저_포인트_충전_시_파라미터_예외_발생() {
-
-            //given
-            UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
-
-            //when, then
-            assertThatThrownBy(() -> userPoint.charge(0L))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("충전 금액은 0보다 커야 합니다.");
-        }
-
-        @Test
-        void 충전_금액이_0보다_클_경우_유저_포인트_충전_시_정상적으로_충전된_유저_포인트_반환() {
-
-            //given
-            UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
-
-            //when
-            UserPoint result = userPoint.charge(1000L);
-
-            //then
-            assertThat(result).isEqualTo(new UserPoint(ANY_ID, 2000L, result.updateMillis()));
-        }
-
-        @Test
-        void 유저_포인트_잔고와_충전_금액의_합이_최대_한도보다_클_경우_유저_포인트_충전_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {100001L, 100002L, 100003L})
+        void 유저_잔고와_충전_금액의_합이_최대_한도보다_클_경우_파라미터_예외_발생(long amount) {
 
             //given
             UserPoint userPoint = new UserPoint(ANY_ID, 100000L, ANY_UPDATE_MILLIS);
 
             //when, then
-            assertThatThrownBy(() -> userPoint.charge(100001L))
+            assertThatThrownBy(() -> userPoint.charge(amount))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("최대 한도를 초과하여 충전하는 것은 불가능합니다.");
         }
 
-        @Test
-        void 유저_포인트_잔고와_충전_금액의_합이_최대_한도와_같은_경우_유저_포인트_충전_시_정상적으로_충전된_유저_포인트_반환() {
+        @ParameterizedTest
+        @ValueSource(longs = {1L, 2L, 3L, 10L, 1000L, 199000L})
+        void 유저_포인트_잔고에_충전_금액이_더해져_유저_포인트_반환(long amount) {
 
             //given
-            UserPoint userPoint = new UserPoint(ANY_ID, 100000L, ANY_UPDATE_MILLIS);
+            UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
 
             //when
-            UserPoint result = userPoint.charge(100000L);
+            UserPoint result = userPoint.charge(amount);
 
             //then
-            assertThat(result).isEqualTo(new UserPoint(ANY_ID, 200000L, result.updateMillis()));
+            assertThat(result).isEqualTo(new UserPoint(ANY_ID, 1000L + amount, result.updateMillis()));
         }
     }
 
     @Nested
     class 유저_포인트_사용 {
 
-        @Test
-        void 사용_금액이_0보다_작을_경우_유저_포인트_사용_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {-1000L, -10L, -3L, -2L, -1L, 0L})
+        void 사용_금액이_0이하이면_작으면_파라미터_예외_발생(long amount) {
 
             //given
             UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
 
             //when, then
-            assertThatThrownBy(() -> userPoint.use(-1L))
+            assertThatThrownBy(() -> userPoint.use(amount))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("사용 금액은 0보다 커야 합니다.");
         }
 
-        @Test
-        void 사용_금액이_0일_경우_유저_포인트_사용_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {1001L, 1002L, 1003L, 2000L})
+        void 유저_포인트_잔고에_사용_금액을_뺀_값이_0보다_작으면_파라미터_예외_발생(long amount) {
 
             //given
             UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
 
             //when, then
-            assertThatThrownBy(() -> userPoint.use(0L))
+            assertThatThrownBy(() -> userPoint.use(amount))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("사용 금액은 0보다 커야 합니다.");
+                    .hasMessageContaining("사용 가능한 금액을 초과하였습니다.");
         }
 
-        @Test
-        void 사용_금액이_0보다_클_경우_유저_포인트_사용_시_정상적으로_사용된_유저_포인트_반환() {
+        @ParameterizedTest
+        @ValueSource(longs = {1L, 2L, 3L, 10L, 1000L, 2000L})
+        void 유저_포인트_작고에서_사용_금액을_뺀_유저_포인트_반환(long amount) {
 
             //given
             UserPoint userPoint = new UserPoint(ANY_ID, 2000L, ANY_UPDATE_MILLIS);
 
             //when
-            UserPoint result = userPoint.use(1000L);
+            UserPoint result = userPoint.use(amount);
 
             //then
-            assertThat(result).isEqualTo(new UserPoint(ANY_ID, 1000L, result.updateMillis()));
-        }
-
-        @Test
-        void 유저_포인트_잔고에_사용_금액을_뺀_값이_0보다_작을_경우_유저_포인트_사용_시_파라미터_예외_발생() {
-
-            //given
-            UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
-
-            //when, then
-            assertThatThrownBy(() -> userPoint.use(1001L))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("사용 가능한 금액을 초과하였습니다.");
-        }
-
-        @Test
-        void 유저_포인트_잔고에_사용_금액을_뺀_값이_0일_경우_유저_포인트_사용_시_정상적으로_사용된_유저_포인트_반환() {
-
-            //given
-            UserPoint userPoint = new UserPoint(ANY_ID, 1000L, ANY_UPDATE_MILLIS);
-
-            //when
-            UserPoint result = userPoint.use(1000L);
-
-            //then
-            assertThat(result).isEqualTo(new UserPoint(ANY_ID, 0L, result.updateMillis()));
+            assertThat(result).isEqualTo(new UserPoint(ANY_ID, 2000L - amount, result.updateMillis()));
         }
     }
 }
