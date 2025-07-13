@@ -1,7 +1,9 @@
 package io.hhplus.tdd.point;
 
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -16,77 +18,75 @@ class PointHistoryTest {
     @Nested
     class 포인트_내역_생성 {
 
-        @Test
-        void 포인트_내역_아이디_값이_0보다_작은_경우_포인트_내역_생성_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {-1000L, -10L, -3L, -2L, -1L})
+        void 아이디_값이_0보다_작으면_파라미터_예외_발생(long id) {
 
             //when, then
-            assertThatThrownBy(() -> new PointHistory(-1L, ANY_USER_ID, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS))
+            assertThatThrownBy(() -> new PointHistory(id, ANY_USER_ID, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("포인트 내역 아이디 값은 0 이상이어야 합니다.");
         }
 
-        @Test
-        void 포인트_내역_아이디_값이_0이상인_경우_포인트_내역_생성_시_정상적으로_포인트_내역_생성() {
+        @ParameterizedTest
+        @ValueSource(longs = {0L, 1L, 2L, 3L, 10L, 1000L})
+        void 아이디_값이_0이상이면_정상적으로_생성(long id) {
 
             //when
-            PointHistory pointHistory = new PointHistory(0L, ANY_USER_ID, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS);
+            PointHistory pointHistory = new PointHistory(id, ANY_USER_ID, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS);
 
             //then
-            assertThat(pointHistory).isEqualTo(new PointHistory(0L, ANY_USER_ID, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS));
+            assertThat(pointHistory).isEqualTo(new PointHistory(id, ANY_USER_ID, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS));
         }
 
-        @Test
-        void 유저_아이디_값이_0보다_작은_경우_포인트_내역_생성_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {-1000L, -10L, -3L, -2L, -1L})
+        void 유저_아이디_값이_0보다_작으면_파라미터_예외_발생(long userId) {
 
             //when, then
-            assertThatThrownBy(() -> new PointHistory(ANY_ID, -1L, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS))
+            assertThatThrownBy(() -> new PointHistory(ANY_ID, userId, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("유저 아이디 값은 0 이상이어야 합니다.");
         }
 
-        @Test
-        void 유저_아이디_값이_0인_경우_포인트_내역_생성_시_정상적으로_포인트_내역_생성() {
+        @ParameterizedTest
+        @ValueSource(longs = {0L, 1L, 2L, 3L, 10L, 1000L})
+        void 유저_아이디_값이_0이상이면_정상적으로_생성(long userId) {
 
             //when
-            PointHistory pointHistory = new PointHistory(ANY_ID, 0L, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS);
+            PointHistory pointHistory = new PointHistory(ANY_ID, userId, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS);
 
             //then
-            assertThat(pointHistory).isEqualTo(new PointHistory(ANY_ID, 0L, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS));
+            assertThat(pointHistory).isEqualTo(new PointHistory(ANY_ID, userId, ANY_AMOUNT, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS));
         }
 
-        @Test
-        void 충전_혹은_사용_금액이_0보다_작은_경우_포인트_내역_생성_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @ValueSource(longs = {-1000L, -10L, -3L, -2L, -1L, 0L})
+        void 금액이_0이하이면_파라미터_예외_발생(long amount) {
 
             //when, then
-            assertThatThrownBy(() -> new PointHistory(ANY_ID, ANY_USER_ID, -1L, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS))
+            assertThatThrownBy(() -> new PointHistory(ANY_ID, ANY_USER_ID, amount, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("충전 혹은 사용 금액은 0보다 커야 합니다.");
         }
 
-        @Test
-        void 충전_혹은_사용_금액이_0인_경우_포인트_내역_생성_시_파라미터_예외_발생() {
-
-            //when, then
-            assertThatThrownBy(() -> new PointHistory(ANY_ID, ANY_USER_ID, 0L, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("충전 혹은 사용 금액은 0보다 커야 합니다.");
-        }
-
-        @Test
-        void 충전_혹은_사용_금액이_0보다_큰_경우_포인트_내역_생성_시_정상적으로_포인트_내역_생성() {
+        @ParameterizedTest
+        @ValueSource(longs = {1L, 2L, 3L, 10L, 1000L})
+        void 금액이_0초과이면_정상적으로_생성(long amount) {
 
             //when
-            PointHistory pointHistory = new PointHistory(ANY_ID, ANY_USER_ID, 1L, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS);
+            PointHistory pointHistory = new PointHistory(ANY_ID, ANY_USER_ID, amount, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS);
 
             //then
-            assertThat(pointHistory).isEqualTo(new PointHistory(ANY_ID, ANY_USER_ID, 1L, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS));
+            assertThat(pointHistory).isEqualTo(new PointHistory(ANY_ID, ANY_USER_ID, amount, ANY_TRANSACTION_TYPE, ANY_UPDATE_MILLIS));
         }
 
-        @Test
-        void 트랜잭션_타입_값이_없는_경우_포인트_내역_생성_시_파라미터_예외_발생() {
+        @ParameterizedTest
+        @NullSource
+        void 트랜잭션_타입이_null_이면_파라미터_예외_발생(TransactionType type) {
 
             //when, then
-            assertThatThrownBy(() -> new PointHistory(ANY_ID, ANY_USER_ID, ANY_AMOUNT, null, ANY_UPDATE_MILLIS))
+            assertThatThrownBy(() -> new PointHistory(ANY_ID, ANY_USER_ID, ANY_AMOUNT, type, ANY_UPDATE_MILLIS))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("트랜잭션 타입은 필수입니다.");
         }

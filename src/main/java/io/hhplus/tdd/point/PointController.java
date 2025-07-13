@@ -22,7 +22,7 @@ public class PointController {
      */
     @GetMapping("{id}")
     public UserPoint point(
-            @PathVariable long id
+            @PathVariable("id") long id
     ) {
         return pointService.getUserPointById(id);
     }
@@ -32,7 +32,7 @@ public class PointController {
      */
     @GetMapping("{id}/histories")
     public List<PointHistory> history(
-            @PathVariable long id
+            @PathVariable("id") long id
     ) {
         return pointService.getPointHistoriesByUserId(id);
     }
@@ -42,7 +42,7 @@ public class PointController {
      */
     @PatchMapping("{id}/charge")
     public UserPoint charge(
-            @PathVariable long id,
+            @PathVariable("id") long id,
             @RequestBody long amount
     ) {
         return pointService.charge(id, amount);
@@ -53,7 +53,7 @@ public class PointController {
      */
     @PatchMapping("{id}/use")
     public UserPoint use(
-            @PathVariable long id,
+            @PathVariable("id") long id,
             @RequestBody long amount
     ) {
         return pointService.use(id, amount);
